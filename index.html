@@ -215,6 +215,9 @@ function typeMsg(){ const el=$("fmsg"), full=CONFIG.finalMessage; el.textContent
   setTimeout(function w(){ el.textContent = full.slice(0,++i); if (i<full.length) setTimeout(w,45); }, 1800); }
 function flash(){ const f = $("flash"); f.classList.remove("on"); void f.offsetWidth; f.classList.add("on"); }
 
+/* État audio (déclaré avant le décompte) */
+let AC=null, master, dry, verb, muted=false;
+
 /* Décompte */
 const target = new Date(CONFIG.date).getTime(), p2 = n => String(n).padStart(2,"0");
 function tick(){
@@ -244,7 +247,6 @@ function boom(n=150){ for (let i=0;i<n;i++) spawn(true); }
 })();
 
 /* ===== Musique & sons (synthétisés, aucun fichier) ===== */
-let AC=null, master, dry, verb, muted=false;
 try{ muted = localStorage.getItem("bday_mute")==="1"; }catch(e){}
 const rnd=(a,b)=>a+Math.random()*(b-a);
 const CH=[[73.42,146.83,174.61,220],[58.27,116.54,146.83,174.61],[49,98,116.54,146.83],[55,110,138.59,164.81]]; // Ré mineur : Dm · Sib · Sol m · La
