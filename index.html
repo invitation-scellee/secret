@@ -196,10 +196,17 @@ const CONFIG = {
   sub: "Une carte repose sous le sceau, à la grande table. Elle ne se retournera qu'à l'heure dite.",
   caption: "Avant la rupture du sceau",
   bells: 12,              // coups de cloche à l'ouverture (minuit = 12)
-  enableRiddles: false,   // passe à true pour réactiver les énigmes
-  riddles: [ { q: "(énigme à écrire)", answers: ["reponse"], hint: "(indice)" } ],
-  finalTitle: "La séance est ouverte.",
-  finalMessage: "…\n\n(écrivez ici l'indice final : lieu, heure, mot de passe…)"
+  enableRiddles: true,    // les énigmes s'ouvrent après la rupture du sceau
+  riddles: [
+    { q: "Je porte ton nom, à quelques lettres près.\nJe suis une sourate du Coran.\nQuel est mon numéro ?",
+      answers: ["19", "dix-neuf", "dix neuf"], hint: "Cherche la sourate « Maryam »." },
+    { q: "Dans cette sourate, une femme épuisée s'appuie contre un arbre.\nIl lui offre son fruit sucré.\nQuel est cet arbre ?",
+      answers: ["palmier", "un palmier", "le palmier", "palmier dattier", "dattier", "un dattier", "palme"], hint: "Son fruit est la datte." }
+  ],
+  finalTitle: "Deux sceaux",
+  finalMessage: "Myriame, j'ai un petit quelque chose pour toi.\n\nMais il faut d'abord casser deux sceaux.",
+  winTitle: "Les sceaux sont brisés",
+  winMessage: "Bien joué Myriame !\n\nJ'ai un petit cadeau pour toi. Envoie-moi juste ton adresse PayPal et je te l'envoie."
 };
 /* ========================================= */
 const $ = id => document.getElementById(id);
@@ -218,10 +225,11 @@ function reveal(){
   document.querySelector(".wrap").classList.add("shake");
   $("seal").classList.add("broken"); flash(); boom(90); crack();
   setTimeout(() => { $("card").classList.add("flipped"); boom(150); whoosh(); toll(CONFIG.bells); typeMsg(); }, 1000);
+  if (CONFIG.enableRiddles) setTimeout(openGame, 6500);
 }
 function toll(n){ for (let i=0;i<n;i++) setTimeout(() => bell(196,.22,8), i*1400); }
-function typeMsg(){ const el=$("fmsg"), full=CONFIG.finalMessage; el.textContent=""; let i=0;
-  setTimeout(function w(){ el.textContent = full.slice(0,++i); if (i<full.length) setTimeout(w,45); }, 1800); }
+function typeMsg(full, delay){ full = full || CONFIG.finalMessage; const el=$("fmsg"); el.textContent=""; let i=0;
+  setTimeout(function w(){ el.textContent = full.slice(0,++i); if (i<full.length) setTimeout(w,45); }, delay==null ? 1800 : delay); }
 function flash(){ const f = $("flash"); f.classList.remove("on"); void f.offsetWidth; f.classList.add("on"); }
 
 /* État audio (déclaré avant le décompte) */
@@ -359,7 +367,7 @@ function render(){
   const n = CONFIG.riddles.length;
   $("dots").innerHTML = CONFIG.riddles.map((_,i)=>`<i class="${i<step?"done":i===step?"on":""}"></i>`).join("");
   if (step >= n){ win(); return; }
-  $("step").textContent = `Arcane ${step+1} sur ${n}`; $("q").textContent = CONFIG.riddles[step].q;
+  $("step").textContent = `Sceau ${step+1} sur ${n}`; $("q").textContent = CONFIG.riddles[step].q;
   $("ans").value = ""; $("msg").textContent = "";
   $("rcard").style.animation = "none"; void $("rcard").offsetWidth; $("rcard").style.animation = "";
   $("ans").focus({preventScroll:true});
@@ -372,16 +380,26 @@ function check(){
     boom(50); chime(); setTimeout(render, 700);
   } else {
     $("rcard").classList.remove("shake"); void $("rcard").offsetWidth; $("rcard").classList.add("shake");
-    $("msg").style.color = "#d8626c"; $("msg").textContent = "Le sceau résiste… réessayez."; thud();
+    $("msg").style.color = "#d8626c"; $("msg").textContent = "Le sceau résiste… réessaie."; thud();
   }
 }
-function win(){ $("game").classList.add("hidden"); $("intro").classList.add("hidden"); reveal(); }
+function openGame(){
+  $("intro").classList.add("hidden");
+  if (step >= CONFIG.riddles.length){ win(); return; }
+  $("game").classList.remove("hidden"); render();
+  $("game").scrollIntoView({ behavior:"smooth", block:"center" });
+}
+function win(){
+  $("game").classList.add("hidden");
+  $("ftitle").textContent = CONFIG.winTitle; typeMsg(CONFIG.winMessage, 300);
+  flash(); boom(200); toll(3);
+  $("card").scrollIntoView({ behavior:"smooth", block:"center" });
+}
 $("start").onclick = () => { $("intro").classList.add("hidden"); $("game").classList.remove("hidden"); render(); };
 $("go").onclick = check;
 $("ans").addEventListener("keydown", e => { if (e.key === "Enter") check(); });
 $("hint").onclick = () => { $("msg").style.color = "var(--mute)"; $("msg").textContent = CONFIG.riddles[step].hint; };
-if (!CONFIG.enableRiddles) $("intro").classList.add("hidden");
-else if (step >= CONFIG.riddles.length){ $("intro").classList.add("hidden"); win(); }
+$("intro").classList.add("hidden");
 </script>
 </body>
 </html>
